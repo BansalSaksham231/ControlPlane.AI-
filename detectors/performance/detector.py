@@ -16,7 +16,7 @@ Critical semantics (do not regress these):
   factors, and never selects an intervention tier.
 
 The backend is deliberately lightweight (TF-IDF + rule-based lexical
-NLI) so the prototype runs on a laptop with no model downloads. The
+NLI) so the system runs on a laptop with no model downloads. The
 ``EmbeddingBackend`` / ``NLIBackend`` abstractions allow a stronger
 transformer backend to be injected later without changing this file.
 """
@@ -567,7 +567,7 @@ class PerformanceDetector:
             + 0.20 * mean_nli
             + 0.20 * evidence_quality
         )
-        # Lexical prototype: never claim very high self-confidence.
+        # Lexical system: never claim very high self-confidence.
         return min(0.9, base)
 
     @staticmethod

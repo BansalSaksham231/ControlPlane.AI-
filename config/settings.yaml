@@ -94,7 +94,7 @@ intervention_tiers:
 # ==================================================
 # CONSEQUENCE WEIGHTS
 # ==================================================
-# These are prototype defaults and will later be evaluated/calibrated.
+# These are system defaults and will later be evaluated/calibrated.
 # Values MUST sum exactly to 1.0.
 consequence_weights:
   financial_impact: 0.30
@@ -106,7 +106,7 @@ consequence_weights:
 # ==================================================
 # PERFORMANCE DETECTOR CONFIG
 # ==================================================
-# The values below are prototype defaults only.
+# The values below are system defaults only.
 # They are not claimed to be empirically optimal.
 performance:
 
@@ -234,7 +234,7 @@ responsibility:
 # ==================================================
 # COST CONFIG
 # ==================================================
-# These are prototype defaults.
+# These are system defaults.
 cost:
 
   enabled: true
@@ -250,7 +250,7 @@ cost:
 # ==================================================
 # DECISION CONFIG
 # ==================================================
-# These thresholds are prototype defaults.
+# These thresholds are system defaults.
 #
 # NOTE ON SEMANTICS:
 # RISK = how likely the AI output/action is to be problematic.
@@ -280,7 +280,7 @@ decision:
 # ==================================================
 # RESPONSIBILITY DETECTOR THRESHOLDS
 # ==================================================
-# Prototype defaults for the unified responsibility detector. The
+# System defaults for the unified responsibility detector. The
 # individual sub-detectors (pii / toxicity / bias) are transparent
 # deterministic heuristics, NOT trained classifiers.
 responsibility_detector:

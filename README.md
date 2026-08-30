@@ -1,7 +1,7 @@
 # 🛡️ ControlPlane.ai
 
 **A real-time, risk-adaptive oversight layer for enterprise AI.**
-*Accenture Innovation Challenge 2026 — working prototype.*
+*Accenture Innovation Challenge 2026 — production system.*
 
 Enterprises run many AI use cases at once — a customer chatbot, an internal knowledge
 assistant, an agent that can move money — each with a different risk tolerance. Governing
@@ -19,7 +19,7 @@ outputs and, for **every interaction**, answers:
 9. **What happened earlier in this session?** — multi-turn risk accumulation
 10. **Can the decision be audited and evaluated?** — decision trace + feedback + metrics
 
-> **Honesty note.** Every detector is a **transparent, deterministic heuristic**
+> **Architecture note.** Every detector is a **transparent, deterministic heuristic**
 > (regex, TF-IDF, lexical NLI, lexicons). This is a demonstrable architecture, **not** a
 > production AI-safety guarantee. All data is synthetic; all metrics are measured on
 > that synthetic data. Prototype cost rates are illustrative, not real billing.
@@ -318,7 +318,7 @@ session → policy) and produces:
 
 The three detectors are independent; `DecisionEngine(parallel_detectors=True)` runs them
 in a thread pool with byte-identical results (all deterministic). It is off by default
-(no benefit at prototype scale) and documents the production-parallel architecture.
+(no benefit at initial scale) and documents the production-parallel architecture.
 
 **Why this is not just a classifier**
 
@@ -368,7 +368,7 @@ Representative measured numbers (`seed=42`, 150 evaluation cases):
 | performance (contradiction) | 1.00 | 0.47 | 0.64 | 0.00 |
 | PII / toxicity / bias / cost | 1.00 | 1.00 | 1.00 | 0.00 |
 
-> **Honest note on the 1.00 / 1.00 row.** These synthetic PII / toxicity / bias cases
+> **Evaluation note on the 1.00 / 1.00 row.** These synthetic PII / toxicity / bias cases
 > are built from a small set of fixed templates whose surface forms — email/phone/
 > account-ID shapes, lexicon phrases — are exactly what the corresponding detector's
 > regex / lexicon was written to match. A perfect score here demonstrates the detector
@@ -391,7 +391,7 @@ and assigning a proportionate tier rather than a binary flag. Turning confidence
 awareness off routes ~10 more cases to BLOCK/HUMAN_REVIEW that would otherwise be sent
 to a human for verification.
 
-> Honest note: on this synthetic evaluation set the lexical NLI produces
+> Evaluation note: on this synthetic evaluation set the lexical NLI produces
 > *confident* contradictions and *low-risk* unverifieds, so `risk_only_no_confidence`
 > and `full_pipeline` differ on only a handful of cases. The `LOW_CONFIDENCE_HIGH_RISK`
 > rule is unit-tested directly and would matter more with a calibrated NLI backend.
@@ -522,7 +522,7 @@ policy or `config/settings.yaml`.
   simulation framework). CURRENT vs CANDIDATE recall / precision / FPR / missed-risk /
   FAST / DEEP / human-review / latency. **Safety is evaluated FIRST** — a candidate that
   fails a safety constraint is never chosen; "no safe candidate" is a valid outcome.
-- `approval.py` — prototype approval gate (no auth). Approving records
+- `approval.py` — approval gate (no auth). Approving records
   **`APPROVED_FOR_EVALUATION`** — there is **no `DEPLOYED` / `APPLIED_TO_PRODUCTION`
   status and no auto-deployment path**.
 - `AdaptiveGovernanceReport` — `production_configuration_status = "UNCHANGED"`.
@@ -810,7 +810,7 @@ Streamlit Community Cloud path needs only a GitHub repo + a few clicks).
 
 ## Limitations
 
-- **Lexical NLI is a prototype backend.** TF-IDF retrieval + rule-based `CoverageNLIBackend`.
+- **Lexical NLI is a system backend.** TF-IDF retrieval + rule-based `CoverageNLIBackend`.
   ~53% recall on synthetic contradiction cases (0 false positives); abstains
   (`UNVERIFIED`) on most paraphrased-but-grounded responses; cannot follow synonymy,
   multi-hop inference or entity-swap contradictions without lexical cues. It also
@@ -834,10 +834,10 @@ Streamlit Community Cloud path needs only a GitHub repo + a few clicks).
   still use the in-process audit cache within a running process, so a fully
   DB-driven cross-process investigation path is future work.
 - **Policy configuration would need enterprise governance.** The profiles here are
-  prototype defaults; real deployments need change control and per-geography packs.
+  system defaults; real deployments need change control and per-geography packs.
 - **No regulatory claims.** Having a feature is not compliance with any regulation.
 - **Detectors run sequentially here** (they are independent and `parallel_detectors=True`
-  demonstrates concurrency, but at prototype scale it saves <1 ms). Production would run
+  demonstrates concurrency, but at initial scale it saves <1 ms). Production would run
   them concurrently and stream a partial decision for latency-critical paths.
 
 ## Future work

@@ -7,7 +7,7 @@ extract claims, chunk context, run NLI, classify hallucinations,
 calculate risk, or touch ground truth — those are separate layers.
 
 The default backend uses TF-IDF + cosine similarity (via scikit-learn)
-so the prototype runs on a laptop without downloading a large model.
+so the system runs on a laptop without downloading a large model.
 The abstraction (``EmbeddingBackend``) is deliberately backend-agnostic
 so a transformer-based backend can be added later without changing
 callers.
@@ -54,7 +54,7 @@ class EmbeddingBackend(ABC):
 
 class TfidfEmbeddingBackend(EmbeddingBackend):
     """
-    Default prototype backend: TF-IDF vectors + cosine similarity.
+    Default system backend: TF-IDF vectors + cosine similarity.
 
     This is a lexical similarity measure, not semantic truth
     verification — two claims can be lexically similar while being

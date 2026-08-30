@@ -90,7 +90,7 @@ def test_counterfactual_changing_action_type(engine):
     assert isinstance(result.tier_changed, bool)
 
 
-def test_counterfactual_no_change_is_honest(engine):
+def test_counterfactual_no_change_is_accurate(engine):
     interaction = scenarios.scenario_a_clean()
     result = compare_decisions(engine, interaction, {"tokens_in": 55})
     assert result.original_decision == "ALLOW"
