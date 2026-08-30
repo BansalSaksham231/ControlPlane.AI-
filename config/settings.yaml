@@ -1,0 +1,711 @@
+# ==================================================
+# ControlPlane.ai — Centralized Configuration
+# ==================================================
+# This file contains configuration only. No secrets, no API keys,
+# no external service configuration. All values below are prototype
+# defaults, not empirically calibrated or optimal values.
+
+seed: 42
+
+# ==================================================
+# DATA GENERATION
+# ==================================================
+data_generation:
+
+  num_synthetic_records: 6000
+  num_evaluation_cases: 150
+
+  output_dir: "data/generated"
+
+  interactions_filename: "interactions.csv"
+  evaluation_filename: "evaluation_cases.csv"
+
+  # Traffic distribution for synthetic interaction generation.
+  # Values MUST sum exactly to 1.0.
+  traffic_distribution:
+    clean: 0.70
+    low_risk: 0.09
+    hallucination: 0.06
+    pii: 0.04
+    toxicity: 0.025
+    bias: 0.025
+    cost_anomaly: 0.04
+    high_consequence: 0.02
+
+  # Evaluation case distribution (counts, not proportions).
+  # Values MUST sum exactly to num_evaluation_cases (150).
+  evaluation_distribution:
+    clean: 50
+    hallucination: 30
+    pii: 25
+    toxicity: 20
+    bias: 15
+    cost_anomaly: 10
+
+# ==================================================
+# APPLICATIONS
+# ==================================================
+applications:
+  - customer_support
+  - internal_knowledge_assistant
+  - decision_support
+
+# ==================================================
+# USER TYPE DISTRIBUTIONS
+# ==================================================
+# Each distribution below is scoped to a single application and
+# must sum to 1.0.
+user_type_distributions:
+
+  customer_support:
+    external_customer: 0.75
+    operations_agent: 0.20
+    manager: 0.05
+
+  internal_knowledge_assistant:
+    employee: 0.65
+    manager: 0.20
+    operations_agent: 0.15
+
+  decision_support:
+    operations_agent: 0.55
+    manager: 0.40
+    employee: 0.05
+
+# ==================================================
+# MODELS
+# ==================================================
+models:
+  - gpt-4o-mini
+  - claude-3-haiku
+  - gemini-flash
+  - local-small-model
+
+# ==================================================
+# INTERVENTION TIERS
+# ==================================================
+intervention_tiers:
+  - ALLOW
+  - ANNOTATE
+  - VERIFY
+  - HUMAN_REVIEW
+  - BLOCK
+
+# ==================================================
+# CONSEQUENCE WEIGHTS
+# ==================================================
+# These are prototype defaults and will later be evaluated/calibrated.
+# Values MUST sum exactly to 1.0.
+consequence_weights:
+  financial_impact: 0.30
+  reversibility: 0.25
+  sensitivity: 0.20
+  blast_radius: 0.15
+  action_automation: 0.10
+
+# ==================================================
+# PERFORMANCE DETECTOR CONFIG
+# ==================================================
+# The values below are prototype defaults only.
+# They are not claimed to be empirically optimal.
+performance:
+
+  # "lite" = lightweight retrieval backend; "transformer" = heavier backend
+  # with a different (higher) retrieval threshold — see below.
+  backend_mode: "lite"
+
+  min_claim_tokens: 2
+
+  top_k_evidence: 3
+
+  # Retrieval threshold used when backend_mode == "lite".
+  retrieval_threshold_lite: 0.10
+
+  # Retrieval threshold used when backend_mode == "transformer".
+  retrieval_threshold_transformer: 0.45
+
+  entailment_threshold: 0.60
+
+  contradiction_threshold: 0.60
+
+  # Risk assigned when a claim's support status cannot be verified.
+  unverified_performance_risk: 0.50
+
+  # Ceiling applied to risk when contradictions are detected.
+  # Ceiling starts at contradiction_ceiling_base and decreases by
+  # contradiction_ceiling_step per contradiction, bottoming out at
+  # contradiction_ceiling_floor.
+  contradiction_ceiling_base: 0.70
+  contradiction_ceiling_step: 0.10
+  contradiction_ceiling_floor: 0.30
+
+  enable_embedding_cache: true
+  embedding_cache_max_entries: 256
+
+  # --- evidence-weighted claim scoring (Round 2 upgrade) ---
+  # Per-claim "evidence strength" in [0,1] blends three signals:
+  #   evidence_strength = w_similarity * retrieval_similarity
+  #                     + w_nli        * nli_confidence
+  #                     + w_available  * evidence_available_flag
+  evidence_strength_weights:
+    similarity: 0.4
+    nli_confidence: 0.4
+    availability: 0.2
+  # Per-claim risk anchors by verification outcome (scaled by evidence
+  # strength / contradiction confidence — see detector docstring).
+  claim_risk_contradiction_base: 0.55
+  claim_risk_contradiction_span: 0.30   # + span * nli_confidence
+  claim_risk_no_evidence: 0.50          # the "we could not check" penalty
+  claim_risk_neutral: 0.42
+  claim_risk_supported_max: 0.08
+  # A claim whose text names money / an action verb / an entity carries
+  # more weight in the response-level aggregate.
+  claim_text_criticality_weight: 0.5
+
+# ==================================================
+# CLAIM / ACTION CRITICALITY
+# ==================================================
+# "How much does it matter if this response is wrong?" — derived ONLY
+# from production-visible action metadata + response text. This is NOT a
+# hidden ground-truth feature.
+criticality:
+
+  # Weighted blend of normalized factors -> action_criticality in [0,1].
+  # Values MUST sum to 1.0.
+  factor_weights:
+    financial_impact: 0.30
+    irreversibility: 0.22
+    sensitivity: 0.18
+    blast_radius: 0.15
+    automation: 0.15
+
+  # ₹ amount that maps to financial_impact = 1.0 (linear below).
+  financial_scale_inr: 500000.0
+  # affected_entities count that maps to blast_radius = 1.0.
+  blast_scale_entities: 100.0
+
+  # Band cutoffs for action_criticality.
+  band_high: 0.66
+  band_moderate: 0.40
+
+  # Reason-code triggers.
+  high_financial_impact_trigger: 0.80
+  irreversible_action_trigger: 0.80
+  high_blast_radius_trigger: 0.70
+
+  # How strongly criticality amplifies performance risk before fusion:
+  #   eff = risk + (1 - risk) * risk * criticality * amplification
+  performance_amplification: 0.60
+
+  # Response-text signals that raise a claim's criticality weight.
+  action_verbs:
+    - approve
+    - cancel
+    - terminate
+    - delete
+    - refund
+    - reimburse
+    - transfer
+    - pay
+    - charge
+    - send
+    - deactivate
+    - suspend
+    - close
+
+# ==================================================
+# RESPONSIBILITY CONFIG
+# ==================================================
+responsibility:
+
+  pii:
+    enabled: true
+
+  toxicity:
+    enabled: true
+
+  bias:
+    enabled: true
+
+  # Intervention tier forced when critical PII is detected,
+  # regardless of other risk signals.
+  critical_pii_action: "BLOCK"
+
+# ==================================================
+# COST CONFIG
+# ==================================================
+# These are prototype defaults.
+cost:
+
+  enabled: true
+
+  # Multiplier over expected/baseline cost beyond which a cost
+  # anomaly is flagged.
+  anomaly_threshold: 2.0
+
+  retry_penalty: 0.10
+
+  tool_call_penalty: 0.05
+
+# ==================================================
+# DECISION CONFIG
+# ==================================================
+# These thresholds are prototype defaults.
+#
+# NOTE ON SEMANTICS:
+# RISK = how likely the AI output/action is to be problematic.
+# CONSEQUENCE = how serious the outcome would be if the AI is wrong.
+# These are deliberately kept as separate concepts and are NOT
+# combined into a single configuration value anywhere in this file.
+#
+# Architecture:
+#   performance risk + responsibility risk + cost risk
+#     -> risk fusion
+#   risk fusion + consequence score
+#     -> policy / decision
+decision:
+
+  # overall_risk (post risk-fusion) at or below each threshold maps
+  # to the corresponding tier, in ascending order.
+  thresholds:
+    allow_max_risk: 0.20
+    annotate_max_risk: 0.40
+    verify_max_risk: 0.60
+    human_review_max_risk: 0.85
+
+  # overall_risk at or above this value is treated as critical,
+  # independent of the tier thresholds above.
+  critical_risk_threshold: 0.85
+
+# ==================================================
+# RESPONSIBILITY DETECTOR THRESHOLDS
+# ==================================================
+# Prototype defaults for the unified responsibility detector. The
+# individual sub-detectors (pii / toxicity / bias) are transparent
+# deterministic heuristics, NOT trained classifiers.
+responsibility_detector:
+
+  # Per-entity severity weights for PII findings. The response-level
+  # pii_risk is driven by the highest-severity entity found.
+  pii_severity:
+    government_id: 0.95
+    credit_card: 0.95
+    financial_account: 0.80
+    email: 0.65
+    phone: 0.65
+    # Internal identifiers echoed back to the (presumably authenticated)
+    # account holder are lower-severity than externally-identifying PII.
+    # They are still recorded and redacted, just not risk-dominant alone.
+    account_id: 0.40
+    employee_id: 0.40
+    postal_address: 0.70
+    person_name: 0.35
+
+  # PII entity types treated as "critical" — these force the configured
+  # critical_pii_action in the policy layer regardless of other signals.
+  pii_critical_entities:
+    - government_id
+    - credit_card
+    - financial_account
+
+  # Toxicity category weights. Response toxicity_risk is driven by the
+  # most severe category triggered, scaled by match density.
+  toxicity_severity:
+    threats: 0.95
+    hate: 0.90
+    harassment: 0.65
+    severe_profanity: 0.55
+
+  # Bias is reported as a *signal*, never as established discrimination.
+  bias_signal_severity:
+    demographic_generalization: 0.70
+    stereotype: 0.65
+    exclusionary_language: 0.55
+    asymmetric_treatment: 0.60
+
+  # Weight of each dimension when fusing into overall_responsibility_risk.
+  # The fused score also has a conservative floor (see fusion.severity_floor).
+  dimension_weights:
+    pii: 0.45
+    toxicity: 0.35
+    bias: 0.20
+
+# ==================================================
+# COST DETECTOR
+# ==================================================
+# Prototype token / tool rates. These are illustrative figures for the
+# demo only and do NOT represent any real provider's billing.
+cost_detector:
+
+  # Cost is expressed in INR per 1,000 tokens, by model.
+  input_rate_per_1k_inr:
+    gpt-4o-mini: 0.013
+    claude-3-haiku: 0.021
+    gemini-flash: 0.010
+    local-small-model: 0.002
+    default: 0.015
+
+  output_rate_per_1k_inr:
+    gpt-4o-mini: 0.052
+    claude-3-haiku: 0.105
+    gemini-flash: 0.030
+    local-small-model: 0.004
+    default: 0.060
+
+  # Flat INR cost assumed per tool call.
+  tool_call_cost_inr: 0.40
+
+  # Flat INR overhead added per retry (wasted upstream work).
+  retry_cost_inr: 0.25
+
+  # Static fallback baselines used before an empirical baseline (from the
+  # evaluation dataset) has been fitted. Anomaly detection compares an
+  # interaction against max(static, empirical-percentile).
+  static_baselines:
+    tokens_in: 200
+    tokens_out: 300
+    latency_ms: 1500.0
+    tool_calls: 2
+    retry_count: 1
+    estimated_cost_inr: 0.05
+
+  # An interaction is flagged on a dimension when it exceeds
+  # baseline * <multiplier> for that dimension.
+  anomaly_multipliers:
+    tokens_in: 2.5
+    tokens_out: 2.5
+    latency_ms: 2.0
+    estimated_cost_inr: 2.0
+
+  # Absolute thresholds for count-style signals.
+  max_normal_tool_calls: 4
+  max_normal_retries: 2
+
+  # Percentile used when deriving an empirical baseline from a corpus.
+  baseline_percentile: 0.80
+
+  # Each independent anomaly indicator contributes this much risk,
+  # capped at 1.0.
+  risk_per_indicator: 0.28
+
+# ==================================================
+# RISK FUSION
+# ==================================================
+fusion:
+
+  # Base weighted contribution of each risk dimension.
+  dimension_weights:
+    performance: 0.40
+    responsibility: 0.40
+    cost: 0.20
+
+  # Conservative safety rule: a single severe dimension must not be
+  # diluted away by low scores elsewhere. overall_risk is lifted toward
+  # the max dimension when that max is high.
+  #
+  #   weighted = sum(weight_i * risk_i)
+  #   blended  = (1 - pull) * weighted + pull * max_dimension
+  #   where pull = severity_pull  if max_dimension >= severity_trigger
+  #               else            severity_pull_low
+  severity_trigger: 0.60
+  severity_pull: 0.65
+  severity_pull_low: 0.15
+
+  # Hard floor: if any dimension is at/above this, overall_risk cannot
+  # fall below floor_value.
+  severity_floor_trigger: 0.85
+  severity_floor_value: 0.80
+
+# ==================================================
+# POLICY ENGINE
+# ==================================================
+# The policy engine maps (risk, consequence, application, action) to an
+# intervention tier. Thresholds live here, not in code. Each application
+# profile overrides the defaults; missing keys fall back to `default`.
+policy:
+
+  default:
+    # overall_risk cutoffs (ascending). A band is chosen by the lowest
+    # cutoff the risk does not exceed.
+    allow_max_risk: 0.20
+    annotate_max_risk: 0.40
+    verify_max_risk: 0.62
+    human_review_max_risk: 0.85
+    # Consequence-aware escalation: when consequence_score >= trigger,
+    # the tier from the risk bands is escalated by `escalation_steps`.
+    consequence_escalation_trigger: 0.65
+    consequence_escalation_steps: 1
+    extreme_factor_trigger: 0.85
+    cost_only_max_tier: VERIFY
+    # Big consequential / high-criticality actions always get at least a check.
+    criticality_min_tier: VERIFY
+    criticality_trigger: 0.66
+    # Dimension-specific rules.
+    contradiction_min_tier: VERIFY
+    unverified_min_tier: ANNOTATE
+    high_responsibility_trigger: 0.60
+    high_responsibility_min_tier: HUMAN_REVIEW
+    critical_pii_action: BLOCK
+    toxicity_block_trigger: 0.85
+    # Low detector confidence nudges toward human oversight.
+    low_confidence_trigger: 0.35
+    low_confidence_min_tier: VERIFY
+    # Risk + confidence rule: a would-be BLOCK backed only by weak
+    # evidence is routed to a human instead of auto-blocked.
+    low_confidence_high_risk_risk_trigger: 0.60
+    low_confidence_high_risk_conf_trigger: 0.45
+    low_confidence_high_risk_cap: HUMAN_REVIEW
+
+  customer_support:
+    allow_max_risk: 0.22
+    annotate_max_risk: 0.42
+    verify_max_risk: 0.60
+    human_review_max_risk: 0.82
+    consequence_escalation_trigger: 0.60
+    consequence_escalation_steps: 1
+    extreme_factor_trigger: 0.85
+    cost_only_max_tier: VERIFY
+    # Big consequential / high-criticality actions always get at least a check.
+    criticality_min_tier: VERIFY
+    criticality_trigger: 0.66
+    contradiction_min_tier: VERIFY
+    unverified_min_tier: ANNOTATE
+    high_responsibility_trigger: 0.55
+    high_responsibility_min_tier: HUMAN_REVIEW
+    critical_pii_action: BLOCK
+    toxicity_block_trigger: 0.80
+    low_confidence_trigger: 0.35
+    low_confidence_min_tier: VERIFY
+
+  internal_knowledge_assistant:
+    allow_max_risk: 0.28
+    annotate_max_risk: 0.50
+    verify_max_risk: 0.70
+    human_review_max_risk: 0.88
+    consequence_escalation_trigger: 0.72
+    consequence_escalation_steps: 1
+    extreme_factor_trigger: 0.85
+    cost_only_max_tier: VERIFY
+    # Big consequential / high-criticality actions always get at least a check.
+    criticality_min_tier: VERIFY
+    criticality_trigger: 0.66
+    contradiction_min_tier: ANNOTATE
+    unverified_min_tier: ALLOW
+    high_responsibility_trigger: 0.65
+    high_responsibility_min_tier: HUMAN_REVIEW
+    critical_pii_action: HUMAN_REVIEW
+    toxicity_block_trigger: 0.88
+    low_confidence_trigger: 0.30
+    low_confidence_min_tier: ANNOTATE
+
+  decision_support:
+    allow_max_risk: 0.15
+    annotate_max_risk: 0.32
+    verify_max_risk: 0.52
+    human_review_max_risk: 0.75
+    consequence_escalation_trigger: 0.50
+    consequence_escalation_steps: 1
+    extreme_factor_trigger: 0.85
+    cost_only_max_tier: VERIFY
+    # Big consequential / high-criticality actions always get at least a check.
+    criticality_min_tier: VERIFY
+    criticality_trigger: 0.66
+    contradiction_min_tier: HUMAN_REVIEW
+    unverified_min_tier: VERIFY
+    high_responsibility_trigger: 0.55
+    high_responsibility_min_tier: HUMAN_REVIEW
+    critical_pii_action: BLOCK
+    toxicity_block_trigger: 0.80
+    low_confidence_trigger: 0.45
+    low_confidence_min_tier: VERIFY
+
+# ==================================================
+# PROGRESSIVE VERIFICATION  (ControlPlane Adaptive Guard)
+# ==================================================
+# "Do not spend maximum verification effort on every AI response. Spend
+# deeper verification only when risk, uncertainty, disagreement or
+# consequence justifies it."
+#
+# The router runs the cheap checks (responsibility + cost) plus a SHALLOW
+# performance pass, then decides FAST vs DEEP. DEEP re-runs the full
+# performance detector. See verification/router.py.
+#
+# ALL VALUES BELOW ARE PROVISIONAL — chosen for sensible behaviour, NOT
+# empirically tuned. Final tuning (threshold sweep) is Phase 9.
+verification:
+
+  enabled: true
+
+  # FAST is only allowed when preliminary risk is at/below this.
+  fast_path_max_risk: 0.35
+  # ...and preliminary confidence is at/above this (unless risk is trivially low).
+  fast_path_min_confidence: 0.70
+  # Below this preliminary risk, low confidence alone does NOT force DEEP
+  # (e.g. a "no verifiable claims" response).
+  low_risk_floor: 0.15
+
+  # Preliminary risk at/above this contributes reason HIGH_PRELIMINARY_RISK.
+  deep_verification_risk_threshold: 0.35
+  # Consequence score at/above this forces DEEP (HIGH_CONSEQUENCE).
+  deep_verification_consequence_threshold: 0.60
+  # ...or a single consequence factor (financial impact / irreversibility)
+  # at/above this — mirrors the policy engine's own notion of "extreme".
+  deep_verification_extreme_factor: 0.85
+  # Action criticality at/above this forces DEEP (HIGH_CRITICALITY).
+  deep_verification_criticality_threshold: 0.60
+
+  # Detector-disagreement score at/above this forces DEEP.
+  disagreement_trigger: 0.45
+
+  # When no usable evidence was retrieved, force DEEP (a full pass may
+  # still find nothing, but the abstention is then well-founded).
+  always_deep_on_missing_evidence: true
+
+  # Evidence breadth for each depth. shallow is a strict subset of deep.
+  shallow_top_k: 1
+  deep_top_k: 3
+
+  # Whether the cheap checks (responsibility + cost + shallow performance)
+  # may run concurrently. Deterministic either way; off by default.
+  parallel_fast_checks: false
+
+  # Deterministic semantic bypass: when a critical outbound-PII hard boundary
+  # is present the PolicyEngine blocks regardless of the grounding score, so
+  # claim extraction / TF-IDF retrieval / NLI are skipped. The DECISION is
+  # unchanged; cross-dimension reason codes (e.g. MULTI_RISK) may drop because
+  # performance is no longer independently measured.
+  bypass_semantics_on_hard_boundary: true
+
+  # Tiered Cascade Router mode.
+  #   false -> AUTHORITATIVE: the ML-driven cascade (matrix-factorisation router
+  #            over an interaction embedding) decides FAST vs DEEP. The
+  #            Tier-0.5 deterministic overrides in VerificationRouter.route()
+  #            (consequence / criticality / evidence quality / preliminary risk
+  #            / hard boundary) can still force DEEP but never force FAST.
+  #   true  -> SHADOW: the cascade verdict is telemetry only; the legacy
+  #            _deep_reasons() logic drives routing.
+  cascade_shadow_mode: false
+
+# ==================================================
+# SESSION / MULTI-TURN RISK
+# ==================================================
+session:
+
+  # Sliding window of most-recent interactions kept per session.
+  history_window: 20
+
+  # Exponential decay applied to prior cumulative risk on each new turn
+  # (0 = no memory, 1 = never forget). Bounded accumulation.
+  decay: 0.80
+
+  # Weight of the (decayed) history vs the current-turn overall_risk when
+  # computing session_risk.
+  history_weight: 0.45
+  current_weight: 0.55
+
+  # A turn counts as a "high-risk event" when its overall_risk is >= this.
+  high_risk_event_threshold: 0.55
+
+  # Escalation: N high-risk events within the window raises the session
+  # to an escalated state and adds a bump to session_risk.
+  escalation_event_count: 3
+  escalation_risk_bump: 0.15
+
+  # Hard cap so accumulation never runs away.
+  max_session_risk: 0.98
+
+  # Non-decaying floor set when a turn is a critical violation (BLOCK, critical
+  # PII, severe toxicity). Every subsequent turn's adjusted risk is at least
+  # this value — a critical history is never decayed away.
+  critical_floor_value: 0.75
+
+# ==================================================
+# EVALUATION
+# ==================================================
+evaluation:
+  # Risk-score threshold used to turn a continuous detector risk into a
+  # binary prediction when scoring against ground-truth boolean labels.
+  risk_binary_threshold: 0.50
+
+  # Buckets for the risk-vs-confidence calibration view.
+  risk_bucket_threshold: 0.55
+  confidence_bucket_threshold: 0.65
+
+# ==================================================
+# CALIBRATION ADVISOR  (Phase 4 — OFFLINE / EVALUATION ONLY)
+# ==================================================
+# The calibration advisor is an EVALUATION subsystem. It simulates
+# alternative threshold configurations against the synthetic evaluation
+# dataset (which HAS ground-truth labels) and reports the safety-vs-cost
+# tradeoff. It is NEVER called from the production decision path and it
+# NEVER mutates the thresholds above.
+#
+# ALL VALUES BELOW ARE PROVISIONAL — CALIBRATION / PHASE 4.
+calibration:
+
+  # Threshold sweep ranges: [min, max, step]. The sweep is deterministic.
+  risk_sweep:          [0.10, 0.90, 0.05]   # verification.deep_verification_risk_threshold
+  confidence_sweep:    [0.30, 0.95, 0.05]   # verification.fast_path_min_confidence
+  consequence_sweep:   [0.30, 0.95, 0.05]   # verification.deep_verification_consequence_threshold
+  criticality_sweep:   [0.30, 0.95, 0.05]   # verification.deep_verification_criticality_threshold
+  disagreement_sweep:  [0.20, 0.80, 0.05]   # verification.disagreement_trigger
+
+  # Safety constraints an operating point MUST satisfy.
+  target_recall: 0.90                 # keep intervention recall on genuinely-risky cases >= this
+  max_false_positive_rate: 0.60       # intervening on genuinely-clean cases
+  max_human_review_rate: 0.50         # fraction routed to HUMAN_REVIEW / BLOCK
+  target_precision: 0.55              # advisory only (reported, not a hard constraint)
+
+  # Among operating points that satisfy the safety constraints, prefer:
+  #   "min_deep_workload"  -> the least DEEP verification (lowest compute/latency)
+  #   "max_f1"             -> the best risk-catching F1
+  objective: "min_deep_workload"
+
+  # Small 2-D grid to show whether thresholds interact (kept deliberately
+  # tiny; the values span the interesting regions of each 1-D sweep).
+  grid_risk:       [0.35, 0.60, 0.85]
+  grid_confidence: [0.30, 0.60, 0.90]
+  grid_top_n: 3
+
+# ==================================================
+# ENTERPRISE OBSERVABILITY / RISK MONITORING  (Phase 5)
+# ==================================================
+# The monitoring layer is a pure O(n) aggregation pass over REAL
+# DecisionTrace records produced by the production pipeline. It never
+# re-runs detectors, never re-runs the decision engine, and never reads
+# ground truth / evaluation labels. It answers "what is happening across
+# our AI traffic?", not "were those decisions correct?".
+#
+# ALL VALUES BELOW ARE PROVISIONAL — operational defaults, not tuned.
+monitoring:
+
+  # Risk-distribution buckets over overall_risk. Contiguous; the final
+  # bucket's max is > 1.0 so a risk of exactly 1.0 is included. A trace is
+  # placed in the first bucket whose max it is below.
+  risk_buckets:
+    - {name: "LOW",      min: 0.00, max: 0.20}
+    - {name: "MODERATE", min: 0.20, max: 0.50}
+    - {name: "HIGH",     min: 0.50, max: 0.75}
+    - {name: "CRITICAL", min: 0.75, max: 1.01}
+
+  # decision_confidence below this counts toward low_confidence_count.
+  low_confidence_threshold: 0.45
+
+  # Percentiles reported for risk and latency (nearest-rank).
+  percentiles: [50, 95]
+
+  # Time-bucket granularity for trend aggregation: "hourly" or "daily".
+  trend_granularity: "hourly"
+
+  # Operational attention signals (NOT statistically-detected anomalies).
+  # A signal fires when the observed aggregate crosses its threshold.
+  attention_signals:
+    high_block_rate: 0.15                # fraction of traffic BLOCKed
+    high_human_review_rate: 0.35         # fraction routed to HUMAN_REVIEW
+    high_deep_verification_rate: 0.85    # fraction using DEEP verification
+    high_p95_latency_ms: 40.0            # p95 total pipeline latency
+    low_mean_confidence: 0.55            # mean decision_confidence below this
+    high_risk_concentration: 0.30        # fraction of traffic in HIGH+CRITICAL buckets
+    # A signal is CRITICAL (vs WARNING) when the observed value is this
+    # many times past the threshold (for "low_" signals: this fraction of).
+    critical_multiplier: 1.5
