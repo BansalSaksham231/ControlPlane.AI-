@@ -6,7 +6,7 @@ dataset and scores it against ground truth. Ground truth is read ONLY
 here — never inside a detector. The pipeline receives production-shaped
 ``Interaction`` objects built strictly from ``Interaction.model_fields``.
 
-Important honesty note: ``expected_decision`` in the dataset is itself a
+Important evaluation note: ``expected_decision`` in the dataset is itself a
 simple heuristic baseline produced by the generator, not an oracle. The
 decision-confusion numbers therefore compare two policies, and are
 reported as such.

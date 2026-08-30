@@ -447,7 +447,7 @@ def test_embedding_mf_fit_is_deterministic():
     assert a == b
 
 
-def test_mf_from_pretrained_mock_is_usable():
+def test_mf_from_pretrained_simulated_is_usable():
     from verification.routing_models import MatrixFactorizationRouter
 
     router = MatrixFactorizationRouter.from_pretrained(None)  # no live backend

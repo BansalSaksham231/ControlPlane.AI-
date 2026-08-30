@@ -167,7 +167,7 @@ class InvestigationCounterfactualRequest(BaseModel):
 
 
 class AdaptiveApprovalRequest(BaseModel):
-    """Human decision on an adaptive recommendation (prototype approval gate)."""
+    """Human decision on an adaptive recommendation (approval gate)."""
 
     model_config = {"extra": "forbid"}
 

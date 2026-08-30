@@ -3,7 +3,7 @@ Cost / Operational Risk Detector.
 
 Estimates the cost of an interaction from a transparent additive model
 (input tokens + output tokens + tool calls + retries, at configurable
-prototype rates) and flags operational anomalies — unusual token usage,
+system rates) and flags operational anomalies — unusual token usage,
 latency, retries, tool-call counts or overall cost spikes — against a
 baseline.
 

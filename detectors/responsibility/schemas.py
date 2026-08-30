@@ -3,7 +3,7 @@ Data contracts for the unified Responsibility Detector.
 
 The Responsibility Detector composes three transparent, deterministic
 sub-detectors — PII, toxicity and bias — into a single result. None of
-them use ground truth. Each is a heuristic prototype, not a certified
+them use ground truth. Each is a heuristic system, not a certified
 classifier; the bias sub-detector in particular reports a *signal*, not
 established discrimination.
 """

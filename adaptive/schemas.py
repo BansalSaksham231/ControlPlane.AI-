@@ -21,7 +21,7 @@ class AdaptiveConfig(_Model):
     # safety constraints used when running the counterfactual bridge
     minimum_recall: float = Field(default=0.90, ge=0, le=1)
     minimum_precision: float = Field(default=0.0, ge=0, le=1)
-    # recommendations older than this many report-builds are EXPIRED (prototype: never)
+    # recommendations older than this many report-builds are EXPIRED (system: never)
     expire_after_builds: int | None = None
 
 

@@ -1855,7 +1855,7 @@ svc = get_service()
 st.title("🛡️ ControlPlane.ai")
 st.caption(
     "Real-time AI risk **governance control plane** — not just a content classifier. "
-    "Heuristic, deterministic prototype on synthetic data."
+    "Heuristic, deterministic system on synthetic data."
 )
 flow = st.columns(5)
 for col, (label, sub) in zip(
@@ -2241,6 +2241,6 @@ with page[9]:
 
 st.divider()
 st.caption(
-    f"ControlPlane.ai v{VERSION} · deterministic heuristic prototype · "
+    f"ControlPlane.ai v{VERSION} · deterministic heuristic system · "
     "synthetic data · not a production safety guarantee."
 )

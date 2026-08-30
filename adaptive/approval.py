@@ -1,5 +1,5 @@
 """
-Human approval gate — a prototype in-memory store.
+Human approval gate — a system in-memory store.
 
 There is NO authentication and NO production-deployment path. Approving a
 recommendation records ``APPROVED_FOR_EVALUATION``; it never writes

@@ -2,7 +2,7 @@
 ControlPlane.ai monitoring dashboard (Streamlit).
 
 Runs the real pipeline over synthetic traffic and visualises the actual
-``DecisionTrace`` outputs — no mocked numbers.
+``DecisionTrace`` outputs — no simulated numbers.
 
     streamlit run dashboard/app.py
 """
@@ -18,7 +18,7 @@ st.set_page_config(page_title="ControlPlane.ai — Monitoring", layout="wide")
 st.title("ControlPlane.ai — Monitoring")
 st.caption(
     "Live view over synthetic traffic. Heuristic, deterministic detectors — "
-    "a prototype, not a production safety guarantee."
+    "a system, not a production safety guarantee."
 )
 
 with st.sidebar:

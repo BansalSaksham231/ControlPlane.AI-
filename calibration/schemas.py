@@ -20,7 +20,7 @@ class CalibrationMetrics(BaseModel):
     """
     Metrics for one simulated configuration over the evaluation dataset.
 
-    A metric whose denominator is zero is ``None`` — never a fake ``0``.
+    A metric whose denominator is zero is ``None`` — never an artificial ``0``.
     """
 
     n_cases: int

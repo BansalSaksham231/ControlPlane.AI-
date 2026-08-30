@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class CostBreakdown(BaseModel):
-    """Transparent per-component cost estimate (prototype rates, not real billing)."""
+    """Transparent per-component cost estimate (system rates, not real billing)."""
 
     input_cost_inr: float = Field(ge=0)
     output_cost_inr: float = Field(ge=0)

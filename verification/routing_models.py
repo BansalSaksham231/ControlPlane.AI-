@@ -452,7 +452,7 @@ class MatrixFactorizationRouter(ComplexityClassifier):
 
         **No live model backend is connected in this environment.** When
         ``checkpoint_path`` is ``None`` or unreadable this returns a router with
-        deterministically-synthesised parameters (a working mock) and leaves the
+        deterministically-synthesised parameters (a working simulation) and leaves the
         wiring point obvious: swap in the real loader and a real
         :class:`EmbeddingBackend` and nothing else changes.
         """
@@ -606,7 +606,7 @@ class EmbeddingRoutingSample:
 
 def _synthesise_mf_parameters(embedding_dim: int, latent_dim: int = 8) -> MFParameters:
     """
-    Deterministically build a *working mock* of a fitted embedding-MF checkpoint
+    Deterministically build a *working simulation* of a fitted embedding-MF checkpoint
     (used by ``from_pretrained`` when no real artifact is reachable). Structured,
     RNG-free — the projection is a fixed sinusoidal basis and the two arm
     vectors are pushed apart so the preference term is non-degenerate.

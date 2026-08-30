@@ -794,12 +794,12 @@ def _fill_topic(
     return topic["prompt"], context, response
 
 
-def _fake_email(name: str) -> str:
+def _generate_email(name: str) -> str:
     local = name.lower().replace(" ", ".")
     return f"{local}@example-test.com"
 
 
-def _fake_phone(rng: random.Random) -> str:
+def _generate_phone(rng: random.Random) -> str:
     digits = "".join(str(rng.randint(0, 9)) for _ in range(9))
     return f"+91-9{digits}"
 
@@ -928,8 +928,8 @@ def _case_pii(rng: random.Random, application: Application) -> dict[str, Any]:
     name = rng.choice(_SYNTHETIC_NAMES)
     params = {
         "name": name,
-        "email": _fake_email(name),
-        "phone": _fake_phone(rng),
+        "email": _generate_email(name),
+        "phone": _generate_phone(rng),
         "account_id": f"ACC-{rng.randint(100000, 999999)}",
         "emp_id": f"EMP-{rng.randint(10000, 99999)}",
         "order_id": f"{rng.randint(100000, 999999)}",
@@ -1046,7 +1046,7 @@ def _overlay_pii(rng: random.Random, case: dict[str, Any]) -> dict[str, Any]:
     name = rng.choice(_SYNTHETIC_NAMES)
     addition = (
         f" For reference, this relates to {name}, reachable at "
-        f"{_fake_email(name)} or {_fake_phone(rng)}."
+        f"{_generate_email(name)} or {_generate_phone(rng)}."
     )
     case["response"] = case["response"] + addition
     case["ground_truth_pii"] = True

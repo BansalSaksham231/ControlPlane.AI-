@@ -504,11 +504,11 @@ def test_real_demo_scenarios_produce_non_empty_report(demo_only_traces):
 
 
 # ------------------------------------------------------------------
-# 22. no fake error counts
+# 22. no artificial error counts
 # ------------------------------------------------------------------
 
 
-def test_no_fake_detector_error_counts(report):
+def test_no_artificial_detector_error_counts(report):
     assert all(d.error_count is None for d in report.detectors)
 
 

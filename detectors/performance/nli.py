@@ -18,7 +18,7 @@ NOT a trained NLI transformer. It approximates entailment/contradiction
 using token overlap, negation polarity, and numeric agreement. It will
 miss genuine semantic relationships that don't show up lexically (e.g.
 synonyms, paraphrase without word overlap, complex logical inference)
-and can be fooled by surface-level tricks. It exists so the prototype
+and can be fooled by surface-level tricks. It exists so the system
 runs on a normal laptop without a model download. The ``NLIBackend``
 abstraction lets a stronger transformer-based backend be substituted
 later without any caller changes.
@@ -268,7 +268,7 @@ class CoverageNLIBackend(NLIBackend):
     what the claim asserts?" — and behaves far better on retrieved
     evidence sentences that are longer and wordier than the claim.
 
-    Same prototype limitations apply: it is a transparent, deterministic,
+    Same system limitations apply: it is a transparent, deterministic,
     rule-based approximation, not a trained NLI transformer. It reasons
     over token coverage, negation polarity and numeric agreement only.
     """
