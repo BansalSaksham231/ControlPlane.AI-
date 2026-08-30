@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 30% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 30% 12%;
+    --muted: 214 20% 94%;
+    --muted-foreground: 220 12% 42%;
+    --primary: 222 68% 46%;
+    --primary-foreground: 0 0% 100%;
+    --border: 216 18% 88%;
+    --input: 216 18% 86%;
+    --ring: 222 68% 46%;
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    --background: 222 30% 8%;
+    --foreground: 210 20% 92%;
+    --card: 222 26% 11%;
+    --card-foreground: 210 20% 92%;
+    --muted: 222 20% 16%;
+    --muted-foreground: 218 14% 62%;
+    --primary: 214 90% 62%;
+    --primary-foreground: 222 40% 10%;
+    --border: 222 18% 20%;
+    --input: 222 18% 22%;
+    --ring: 214 90% 62%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Thin horizontal meter used for the decision-mix bars. */
+  .cp-meter {
+    appearance: none;
+    overflow: hidden;
+    border: 0;
+    border-radius: 9999px;
+    background-color: hsl(var(--muted));
+  }
+  .cp-meter::-webkit-progress-bar {
+    background-color: hsl(var(--muted));
+  }
+  .cp-meter::-webkit-progress-value {
+    background-color: hsl(var(--primary));
+    border-radius: 9999px;
+  }
+  .cp-meter::-moz-progress-bar {
+    background-color: hsl(var(--primary));
+    border-radius: 9999px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: 222 30% 8%;
+    --foreground: 210 20% 92%;
+    --card: 222 26% 11%;
+    --card-foreground: 210 20% 92%;
+    --muted: 222 20% 16%;
+    --muted-foreground: 218 14% 62%;
+    --primary: 214 90% 62%;
+    --primary-foreground: 222 40% 10%;
+    --border: 222 18% 20%;
+    --input: 222 18% 22%;
+    --ring: 214 90% 62%;
+  }
+}

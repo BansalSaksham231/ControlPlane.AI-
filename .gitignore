@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+data/generated/
+*.egg-info/
+.venv/
+venv/
+.env
+feedback.jsonl
+data/generated/feedback.jsonl
+calibration_report.json
+monitoring_report.json
+
+# local SQLite persistence (build artifact — see database/ module)
+*.db
+*.sqlite
+*.sqlite3
+
+# Next.js frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts

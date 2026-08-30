@@ -1,0 +1,24 @@
+# Render.com blueprint — deploys the ControlPlane.ai web UI and the API.
+# Push to a Git repo, then "New + Blueprint" on Render and point it here.
+services:
+  - type: web
+    name: controlplane-ui
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python run_generator.py"
+    startCommand: "streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+
+  - type: web
+    name: controlplane-api
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python run_generator.py"
+    startCommand: "uvicorn api.app:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: CONTROLPLANE_FAST_START
+        value: "0"

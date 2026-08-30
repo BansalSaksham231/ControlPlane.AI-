@@ -1,0 +1,84 @@
+# ControlPlane.ai — full local stack: FastAPI API + Streamlit UI + PostgreSQL.
+#
+#   docker compose up --build
+#
+#   API   -> http://localhost:8000  (docs at /docs)
+#   UI    -> http://localhost:8501
+#   DB    -> localhost:5432  (postgres/postgres, db "controlplane")
+#
+# The API persists sessions, decision traces and governance actions to
+# Postgres. The UI talks to the API over the internal "controlplane" network.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: controlplane
+    volumes:
+      - controlplane_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d controlplane"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - controlplane
+
+  api:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    environment:
+      CONTROLPLANE_PERSISTENCE: "1"
+      CONTROLPLANE_DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/controlplane
+      CONTROLPLANE_CORS_ORIGINS: "http://localhost:8501"
+      # Set a value to require the X-API-Key header on every request:
+      CONTROLPLANE_API_KEY: ""
+      UVICORN_WORKERS: "1"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - controlplane
+
+  ui:
+    build:
+      context: .
+      dockerfile: ui.Dockerfile
+    environment:
+      CONTROLPLANE_API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    networks:
+      - controlplane
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      args:
+        # Browser calls the API through the Next.js server as a same-origin
+        # proxy (/api -> api:8000), so no key is exposed in the bundle.
+        NEXT_PUBLIC_API_URL: /api
+    environment:
+      API_PROXY_TARGET: http://api:8000
+      # CONTROLPLANE_API_KEY: change-me   # injected server-side by the proxy
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - controlplane
+
+volumes:
+  controlplane_pgdata:
+
+networks:
+  controlplane:
+    driver: bridge
